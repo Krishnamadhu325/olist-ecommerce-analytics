@@ -1,6 +1,6 @@
 # Olist E-Commerce Analytics System
 
-A 5-model end-to-end analytics project built on the [Olist Brazilian E-Commerce dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) (113,390 orders, 2016–2018) as part of my data analytics internship at **Voleergo Solutions LLP**.
+A 5-model end-to-end analytics project built on the [Olist Brazilian E-Commerce dataset](https://www.kaggle.com/datasets/enzoschitini/brazilian-e-commerce-public-dataset-by-olist) (113,390 orders, 2016–2018) as part of my data analytics internship at **Voleergo Solutions LLP**.
 
 The project covers the full analytics workflow: raw data → Python modelling → Power BI dashboard.
 
@@ -27,7 +27,7 @@ Olist_E-commerce_Project/
 │   └── module5_segmentation.ipynb
 │
 ├── Outputs/
-│   ├── (Module 1 output files)
+│   ├── Module1/
 │   ├── Module2/
 │   ├── Module3/
 │   │   └── feature_importance.png
