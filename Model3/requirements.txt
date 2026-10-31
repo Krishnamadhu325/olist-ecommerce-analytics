@@ -1,0 +1,5 @@
+# Tested with Python 3.13.9
+pandas==2.3.3
+numpy==2.3.5
+matplotlib==3.10.6
+openpyxl==3.1.5   # pandas needs it to read the .xlsx

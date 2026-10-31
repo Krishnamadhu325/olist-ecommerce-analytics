@@ -1,0 +1,206 @@
+
+========================================================================
+1. SPLIT
+========================================================================
+train: 76,102 orders, late 6,165 (8.10%)
+test : 19,026 orders, late 1,541 (8.10%)   <- natural late rate kept, not balanced
+check passed: no order_id appears in both train and test (one row per order, so this is guaranteed)
+
+========================================================================
+2. BASELINE: 'never late'
+========================================================================
+say 'not late' for every test order -> accuracy 91.90%, real lates caught 0 of 1,541
+flag a RANDOM 10% of orders -> catches about 10% of real lates (~154 of 1,541)
+
+========================================================================
+3. LOGISTIC REGRESSION (main model)
+========================================================================
+yes/no cut-off chosen on TRAIN data only: flag 'late' when predicted chance >= 0.12
+5-fold AUC on train (out-of-sample): 0.698
+
+[Logistic regression]  cut-off 0.12, on 19,026 test orders (1,541 really late)
+  real lates caught (true alarms)   : 616 of 1,541  = recall 40.0%
+  real lates missed                 : 925
+  false alarms (flagged, not late)  : 2,921
+  orders flagged in total           : 3,537 (18.6% of test)
+  precision for late                : 17.4%  (of every 100 flagged, 17 are really late; random flagging gives 8.1)
+  accuracy                          : 79.79%  (never-late gets 91.90%; accuracy is NOT the score here)
+  riskiest 10% (1,903 orders)      : catches 391 of 1,541 real lates = 25.4%  (random would give ~10%); 20.5% of them really late
+  AUC 0.692  (0.5 = coin flip, 1.0 = perfect) | average precision 0.163  (random = 0.081)
+
+for comparison, the default 0.50 cut-off flags 0 orders and catches 0 real lates
+give-or-take (95% range from re-sampling the test set 500 times): riskiest-10% catch 23.4% to 27.3%; AUC 0.678 to 0.706
+
+========================================================================
+4. TREE MODEL (HistGradientBoosting) vs LOGISTIC: does it add CLEAR value?
+========================================================================
+rule fixed BEFORE looking: tree is worth keeping only if it beats logistic by >= 5% points on riskiest-10% catch AND >= 0.02 AUC
+
+[Tree (HistGradientBoosting, fixed settings, not tuned)]  cut-off 0.12, on 19,026 test orders (1,541 really late)
+  real lates caught (true alarms)   : 625 of 1,541  = recall 40.6%
+  real lates missed                 : 916
+  false alarms (flagged, not late)  : 2,792
+  orders flagged in total           : 3,417 (18.0% of test)
+  precision for late                : 18.3%  (of every 100 flagged, 18 are really late; random flagging gives 8.1)
+  accuracy                          : 80.51%  (never-late gets 91.90%; accuracy is NOT the score here)
+  riskiest 10% (1,903 orders)      : catches 442 of 1,541 real lates = 28.7%  (random would give ~10%); 23.2% of them really late
+  AUC 0.706  (0.5 = coin flip, 1.0 = perfect) | average precision 0.193  (random = 0.081)
+
+difference tree - logistic: riskiest-10% catch +3.3% points, AUC +0.014
+VERDICT: tree does NOT add clear value; logistic regression stays the model
+
+========================================================================
+5. PERMUTATION IMPORTANCE (test set, logistic regression)
+========================================================================
+Shuffle one column at random and see how much the score (AUC) drops. Big drop = the model leaned on that column.
+         feature  auc_drop  spread
+ est_window_days    0.1067  0.0038
+  customer_state    0.0974  0.0051
+ any_cross_state    0.0314  0.0027
+       n_sellers    0.0069  0.0022
+  approval_hours    0.0057  0.0008
+         n_items    0.0036  0.0012
+    purchase_dow    0.0015  0.0006
+   freight_total    0.0015  0.0009
+  weight_total_g    0.0009  0.0007
+     price_total    0.0003  0.0002
+volume_total_cm3   -0.0000  0.0001
+
+========================================================================
+6. EXTRA CHECK: train on older orders, test on the NEWEST 20% (real-life direction)
+========================================================================
+train on orders purchased up to 2018-05-28, test on 19,026 newer orders (late rate 5.35%; train late rate 8.79%)
+AUC 0.716 | riskiest 10% catches 20.6% of real lates
+
+========================================================================
+6b. EXTRA CHECK: give the model the purchase MONTH (NOT used in the saved model)
+========================================================================
+The month IS known at approval, so it is allowed. But it only lets the model memorise this dataset's bad months.
+random split WITH month: AUC 0.759 (without: 0.692); riskiest 10% catches 33.4% (without: 25.4%)
+older->newest WITH month: AUC 0.711 (without: 0.716); riskiest 10% catches 19.5% (without: 20.6%)
+(newest months are unseen categories, so the month adds nothing there. The jump, if any, only shows on the random split.)
+
+========================================================================
+7. PLAIN LATE-RATE TABLES (all 95,128 orders; counts shown; descriptive, not model output)
+========================================================================
+overall: 7,706 late of 95,128 = 8.10%
+
+--- by customer state ---
+                orders  late  late_rate_%                      note
+customer_state                                                     
+AL                 393    94        23.92                          
+MA                 708   141        19.92                          
+PI                 469    75        15.99                          
+SE                 333    51        15.32                          
+CE                1265   192        15.18                          
+BA                3215   452        14.06                          
+RJ               12169  1641        13.49                          
+TO                 271    35        12.92                          
+RR                  39     5        12.82  few orders: do not trust
+PA                 929   116        12.49                          
+ES                1978   240        12.13                          
+MS                 692    80        11.56                          
+PB                 509    57        11.20                          
+RN                 468    51        10.90                          
+PE                1576   169        10.72                          
+SC                3492   336         9.62                          
+GO                1911   153         8.01                          
+RS                5266   378         7.18                          
+DF                2050   146         7.12                          
+MT                 874    58         6.64                          
+SP               39951  2343         5.86                          
+MG               11188   631         5.64                          
+PR                4855   243         5.01                          
+AP                  67     3         4.48  few orders: do not trust
+AM                 144     6         4.17                          
+AC                  78     3         3.85  few orders: do not trust
+RO                 238     7         2.94                          
+
+--- by estimated window band ---
+                 orders  late  late_rate_% note
+est_window_days                                
+under 15 days     13860  1223         8.82     
+15-19.9           16371  1413         8.63     
+20-24.9           26015  2429         9.34     
+25-29.9           19260  1554         8.07     
+30-39.9           15802   993         6.28     
+40+ days           3820    94         2.46     
+
+--- by freight band ---
+               orders  late  late_rate_% note
+freight_total                                
+R$0 (free)        334    14         4.19     
+0.01-10         10509   655         6.23     
+10.01-15        19249  1198         6.22     
+15.01-20        32372  2812         8.69     
+20.01-30        16151  1467         9.08     
+30.01-50        10507   969         9.22     
+over 50          6006   591         9.84     
+
+--- by number of sellers ---
+            orders  late  late_rate_%                      note
+n_sellers                                                      
+1 seller     93880  7689         8.19                          
+2 sellers     1191    17         1.43                          
+3+ sellers      57     0         0.00  few orders: do not trust
+
+--- by cross-state ---
+                                 orders  late  late_rate_% note
+any_cross_state                                                
+all items from customer's state   34083  2067         6.06     
+some item from another state      61045  5639         9.24     
+
+--- by purchase month (extra) ---
+                orders  late  late_rate_%                      note
+purchase_month                                                     
+2016-10            268     3         1.12  few orders: do not trust
+2016-12              1     0         0.00  few orders: do not trust
+2017-01            737    23         3.12                          
+2017-02           1592    51         3.20                          
+2017-03           2496   138         5.53                          
+2017-04           2243   176         7.85                          
+2017-05           3466   126         3.64                          
+2017-06           3085   119         3.86                          
+2017-07           3824   132         3.45                          
+2017-08           4129   136         3.29                          
+2017-09           4090   211         5.16                          
+2017-10           4428   235         5.31                          
+2017-11           7186  1021        14.21                          
+2017-12           5383   447         8.30                          
+2018-01           6901   445         6.45                          
+2018-02           6451  1039        16.11                          
+2018-03           6884  1475        21.43                          
+2018-04           6731   359         5.33                          
+2018-05           6716   554         8.25                          
+2018-06           6075    83         1.37                          
+2018-07           6118   276         4.51                          
+2018-08           6324   657        10.39                          
+
+========================================================================
+8. SAVING (one pipeline = preprocessing + model, saved together)
+========================================================================
+check passed: the reloaded file gives exactly the same predictions as the model in memory
+state codes live INSIDE the pipeline (one-hot encoder knows 27 states); there is no separate state encoder that could drift
+check passed: an unknown state code does not crash the pipeline
+saved model: Logistic regression, cut-off 0.12
+
+========================================================================
+HANDOFF SUMMARY
+========================================================================
+HANDOFF SUMMARY - Olist Model 1: will this order be late (yes/no)
+DATA: 113,390 rows -> 108,640 items -> 95,128 distinct orders; late (delivered > estimated, exact time) 7,706 = 8.10%.
+Features known at approval: customer_state, purchase weekday, estimated window days, approval hours, n_items, n_sellers,
+ any item shipped from a different state, price_total, freight_total, weight_total, volume_total. No payment, no seller state, no delivery/carrier dates.
+SPLIT: by order, stratified on late, 80/20, seed 42. Train 76,102 (late 6,165); test 19,026 (late 1,541 = 8.10%, natural).
+BASELINE never-late: accuracy 91.90%, catches 0 of 1,541. Random 10% flag catches ~10%.
+LOGISTIC (cut-off 0.12 chosen on train): caught 616/1,541 (recall 40.0%), missed 925, false alarms 2,921, flagged 3,537, precision 17.4%.
+ Riskiest 10% (1,903 orders) catches 391 = 25.4% of real lates (95% range 23.4%-27.3%). AUC 0.692 (0.678-0.706), train 5-fold AUC 0.698.
+TREE (HistGradientBoosting, not tuned): riskiest 10% 28.7%, AUC 0.706, recall 40.6%, precision 18.3%. Verdict: no clear value, logistic kept.
+TOP permutation importance (AUC drop): est_window_days 0.107, customer_state 0.097, any_cross_state 0.031, n_sellers 0.007.
+TIME CHECK (train older 80%, test newest 20%): AUC 0.716, riskiest 10% catches 20.6%; newest-20% late rate 5.35% vs 8.79% in the older 80%.
+MONTH TEST (not in saved model): random-split AUC 0.759 / riskiest 10% 33.4% with purchase month; older->newest AUC 0.711.
+LATE RATE BY MONTH swings 1.4% (Jun 2018) to 21.4% (Mar 2018); Nov 2017 14.2%, Feb 2018 16.1%. Multi-seller orders only 1.4% late (17 of 1,191) vs 7.2% for single-seller orders with 2+ items: unexplained.
+PAYMENT ODDITIES: 4 zero-value voucher rows, 3 zero-installment rows (2 orders), 302 mismatch orders: none touch Model 1 (see outputs/payment_checks.txt).
+CANCELED: 6 orders kept (1 late); effect on late rate 0.0006 points.
+FILES: 01_build_order_table.py, 02_payment_checks.py, 03_model1_late.py, requirements.txt, data/olist_order_level.csv, models/olist_late_pipeline.joblib.
+OPEN: Power BI 28,127 / 7% gap; Models 2-5; user's 3 answers (clusters 3 vs 2, leaky run sample, hand tuning).

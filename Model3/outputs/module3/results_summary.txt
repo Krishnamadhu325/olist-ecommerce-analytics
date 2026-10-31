@@ -1,0 +1,80 @@
+Python 3.13.9 | pandas 2.3.3 | numpy 2.3.5 | matplotlib 3.10.6
+
+==============================================================================
+STEP 1  Load data and check the grain
+==============================================================================
+rows: 113,390 | columns: 34
+items (order_id + order_item_id): 108,640  -> one row per item, assert passed
+distinct orders: 95,128 | distinct products: 31,625 | distinct categories: 73
+order_status (rows): {'delivered': 113383, 'canceled': 7}  (canceled orders are kept)
+
+==============================================================================
+STEP 2  English category names
+==============================================================================
+translation file rows: 71 | added: 2 | names changed on top of the file: 6
+                                           pt               en_in_file                         en_used                              source
+                construcao_ferramentas_jardim costruction_tools_garden       construction_tools_garden                  typo/meaning fixed
+                                casa_conforto             home_confort                    home_comfort                  typo/meaning fixed
+           construcao_ferramentas_ferramentas  costruction_tools_tools        construction_tools_tools                  typo/meaning fixed
+                       fashion_roupa_feminina   fashio_female_clothing         fashion_female_clothing                  typo/meaning fixed
+                           artes_e_artesanato    arts_and_craftmanship          arts_and_craftsmanship                  typo/meaning fixed
+                           seguros_e_servicos    security_and_services          insurance_and_services                  typo/meaning fixed
+                                     pc_gamer                                                 pc_gamer added (not in the translation file)
+portateis_cozinha_e_preparadores_de_alimentos                          portable_kitchen_food_preparers added (not in the translation file)
+
+==============================================================================
+STEP 3  Distinct products per category
+==============================================================================
+products: 31,625 | categories: 73 | largest by products: bed_bath_table (2,990)
+
+==============================================================================
+STEP 4  Revenue Pareto at ITEM grain
+==============================================================================
+Totals at item grain: price 13,046,300.07 | freight 2,170,960.13 | price + freight 15,217,260.20
+Other possible revenue totals (for reference): payment_value over distinct payments 15,225,816.89 | payment_value over all rows 19,530,503.34
+
+PRICE ONLY (headline): 73 categories | 80% reached at 17 categories (cumulative at 16 = 79.05%, at 17 = 80.73%)
+  top-5 cumulative %: 9.45 / 18.39 / 26.23 / 33.55 / 40.36
+  top-5: health_beauty, watches_gifts, bed_bath_table, sports_leisure, computers_accessories
+  top-10 cumulative %: 63.26
+  items in the top 10 categories: 69,180 of 108,640 (63.7%)
+  items in the first 17 categories: 88,531 of 108,640 (81.5%)
+  category that crosses 80%: computers
+
+PRICE + FREIGHT: 73 categories | 80% reached at 17 categories (cumulative at 16 = 79.23%, at 17 = 80.88%)
+  top-5 cumulative %: 9.28 / 17.59 / 25.64 / 32.98 / 39.77
+  top-5: health_beauty, watches_gifts, bed_bath_table, sports_leisure, computers_accessories
+  top-10 cumulative %: 63.20
+  items in the top 10 categories: 69,417 of 108,640 (63.9%)
+  items in the first 17 categories: 90,256 of 108,640 (83.1%)
+  category that crosses 80%: pet_shop
+
+Count to reach 80%: price 17 vs price + freight 17. Only in the price-only list: ['computers'] | only in the price + freight list: ['pet_shop']
+Top-20 lists (swapped categories): rows vs items ['luggage_accessories'] -> ['consoles_games']; items vs products ['consoles_games', 'office_furniture'] -> ['construction_tools_construction', 'home_appliances']
+
+==============================================================================
+STEP 4b  Grain checks
+==============================================================================
+orders with items from more than one category: 724 of 95,128
+rows expected if every item repeats once per payment: 113,390 (actual 113,390) -> MATCH
+
+==============================================================================
+STEP 5  Replay of the old row-level Pareto, and old vs new
+==============================================================================
+replay check - old top-5 cumulative 39.58: 39.58 OK
+(old method reaches 80% at 17 categories - the earlier version did not report this)
+summing over rows overstates total price by 4.46% and freight by 4.59%
+
+OLD vs NEW:
+                                   item              old                                         new
+                             Money unit   rows (113,390)                             items (108,640)
+                            Total price    13,627,670.23                               13,046,300.07
+                          Total freight     2,270,519.65                                2,170,960.13
+                     Revenue definition  price + freight     price only (price + freight as a check)
+Top-5 cumulative % (old: price+freight)            39.58           40.36 price | 39.77 price+freight
+              Categories needed for 80% 17 (not printed) 17 of 73 (price) | 17 of 73 (price+freight)
+
+==============================================================================
+STEP 6  Charts
+==============================================================================
+saved: 01_pareto_items.png, 02_top10_categories.png

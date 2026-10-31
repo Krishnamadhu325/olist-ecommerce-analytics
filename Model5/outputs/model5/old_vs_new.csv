@@ -1,0 +1,12 @@
+item,earlier,now
+Unit called 'customer',customer_id (one per ORDER),customer_unique_id
+Units clustered,"95,128","92,081"
+Total paid used (R$),"19,530,503.34 (rows)","15,225,816.89 (payments once)"
+Largest single total (R$),"109,312.64","13,664.08"
+Sample to choose k,"10,000 WITH repeats","10,000 WITHOUT repeats"
+k chosen (max silhouette),2,2
+Silhouette on sample at chosen k,0.5923,0.7395
+"Silhouette, final model","0.5833 (all 95,128, earlier version)","0.7164 (sample of 20,000)"
+Cluster sizes (low spend first),"[78661, 16467]","[87300, 4781]"
+Instalments vs payment_value r,"0.2743 (n=113,390 rows)","0.3325 (n=99,329 payments)"
+Payment type,"profiled afterwards, not an input","profiled afterwards, not an input"

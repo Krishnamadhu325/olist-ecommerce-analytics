@@ -1,0 +1,3 @@
+cluster,customers,share_%,total_paid_mean,avg_installments_mean,avg_price_mean,avg_freight_mean,total_paid_median,avg_installments_median,avg_price_median,avg_freight_median
+0,87300,94.8,129.1,2.71,95.4,18.34,102.32,1.33,72.99,16.12
+1,4781,5.2,827.4,6.47,682.63,54.53,669.4,8.0,579.0,41.43

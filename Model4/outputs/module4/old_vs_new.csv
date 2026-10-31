@@ -1,0 +1,9 @@
+item,old,new
+what is counted,rows (item x payment),distinct orders (order_id)
+total counted,"113,390 rows, 22 months","94,859 orders, 20 months (all 95,128 orders in table)"
+months used,Oct 2016-Aug 2018 with Nov 2016 missing,"2017-01 to 2018-08, unbroken, each >= 100 orders"
+Nov 2017,"8,683 rows","7,186 orders"
+method,"seasonal_decompose, additive, period=6 (chosen, not detected)","no decomposition: monthly table, same-month 2017 vs 2018, daily check"
+peak / trough month,May / June (tie-break of equal values),no seasonal claim made
+trend statement,'upward' (last trend value > first),"rise through 2017, then 6,075-6,901 orders a month in Jan-Aug 2018"
+revenue,not measured,"item price per month, shown separately (freight excluded)"

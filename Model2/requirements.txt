@@ -1,0 +1,6 @@
+# Tested with Python 3.12, pandas 3.0.2, numpy 2.4.4, matplotlib 3.10.8, openpyxl 3.1.5
+# Should also work with pandas >= 2.2 (the script uses groupby.apply(include_groups=False)).
+pandas>=2.2
+numpy>=1.26
+matplotlib>=3.8
+openpyxl>=3.1   # needed by pandas to read the .xlsx file

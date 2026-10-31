@@ -1,0 +1,35 @@
+CLEANING LOG
+source file: Brazilian-Ecommerce-Cleaned.xlsx
+rows read: 113,390   columns: 34
+missing values in the columns we use: 0
+check passed: item values (price, freight, weight, seller, product) are identical across the payment-copies of an item
+rows -> distinct items (order_id + order_item_id): 113,390 -> 108,640  (4,750 copy-rows created by several payments, removed)
+check passed: customer state, all dates and status are the same on every row of an order
+
+CHECKS PASSED: order_id unique, row count = 95,128, item counts add up, no negative times
+
+MONEY: counted once per item vs summed over all rows (this is the inflation avoided)
+  price    once per item  13,046,300.07 | over all rows  13,627,670.23 | inflation 4.5%
+  freight  once per item   2,170,960.13 | over all rows   2,270,519.65 | inflation 4.6%
+  order table price_total sum = 13,046,300.07 (matches once-per-item: True)
+
+LEFT AS THEY ARE (flagged, not changed):
+  canceled orders: 6 (they still carry a delivery date; kept so the count stays 95,128; late among them: 1)
+  items with product_weight_g == 0: 8 (kept as 0)
+  orders with freight_total == 0: 334
+  orders with more than 1 seller: 1,248  (kept, flagged by n_sellers)
+  orders with any item from a different state than the customer: 61,045
+  payment columns: not carried into the order table (Model 1 does not use payment data)
+  seller state: used only to build any_cross_state, not kept as a feature (an order can have several sellers, so one order has no single seller state)
+
+TARGET is_late (delivered > estimated, exact timestamp): 7,706 of 95,128 = 8.10%
+
+COLUMN ROLES in data/olist_order_level.csv
+  id          : order_id
+  FEATURES    : customer_state, purchase_dow, est_window_days, approval_hours, n_items, n_sellers, any_cross_state, price_total, freight_total, weight_total_g, volume_total_cm3
+  target      : is_late
+  OUTCOME-ONLY, never a feature: order_delivered_customer_date (the estimated date IS known at purchase; it enters only as est_window_days)
+  tables-only : order_status, purchase_month, order_purchase_timestamp, order_approved_at
+  NOT in file : carrier handover date, payment columns, seller_state, seller_id
+
+saved data\olist_order_level.csv  (95,128 rows x 19 columns)

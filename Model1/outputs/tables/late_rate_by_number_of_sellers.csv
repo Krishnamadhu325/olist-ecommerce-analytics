@@ -1,0 +1,4 @@
+n_sellers,orders,late,late_rate_%,note
+1 seller,93880,7689,8.19,
+2 sellers,1191,17,1.43,
+3+ sellers,57,0,0.0,few orders: do not trust

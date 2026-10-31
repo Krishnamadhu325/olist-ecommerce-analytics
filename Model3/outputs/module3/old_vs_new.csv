@@ -1,0 +1,7 @@
+item,old,new
+Money unit,"rows (113,390)","items (108,640)"
+Total price,"13,627,670.23","13,046,300.07"
+Total freight,"2,270,519.65","2,170,960.13"
+Revenue definition,price + freight,price only (price + freight as a check)
+Top-5 cumulative % (old: price+freight),39.58,40.36 price | 39.77 price+freight
+Categories needed for 80%,17 (not printed),17 of 73 (price) | 17 of 73 (price+freight)

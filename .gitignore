@@ -1,0 +1,23 @@
+# Data files: never published
+data/
+Data/
+*.xlsx
+
+# Saved model: recreated by Model1/03_model1_late.py
+models/
+*.joblib
+
+# Power BI report files: they contain a copy of the data
+*.pbix
+
+# Drafts and leftovers that must not be pushed
+README_module5_draft.md
+Model4/outputs/module5/
+
+# Python and editor files
+__pycache__/
+*.pyc
+.venv/
+.vscode/
+.ipynb_checkpoints/
+~$*
